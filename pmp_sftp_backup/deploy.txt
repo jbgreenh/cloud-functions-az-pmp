@@ -1,0 +1,4 @@
+gcloud beta functions deploy pmp_sftp_backup \
+  --docker-registry=artifact-registry \
+--no-gen2 --trigger-topic=sftp-backup-trigger --runtime=python311 --region=us-west1 \
+--set-secrets=pmp_host=projects/423748121399/secrets/pmp_sftp_host:latest,pmp_password=projects/423748121399/secrets/pmp_password:latest,pmp_port=projects/423748121399/secrets/pmp_sftp_port:latest,pmp_path=projects/423748121399/secrets/pmp_sftp_remote_path:latest,pmp_user=projects/423748121399/secrets/pmp_sftp_username:latest,pmp_folder=projects/423748121399/secrets/folder_pmp_sftp_backup:latest,topic_id=projects/423748121399/secrets/email_topic_id:1,project_id=projects/423748121399/secrets/project_id:1

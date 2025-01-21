@@ -1,0 +1,3 @@
+gcloud beta functions deploy sub-pubsub \
+  --docker-registry=artifact-registry \
+--no-gen2 --trigger-topic=email-logs --runtime=python311 --region=us-west1

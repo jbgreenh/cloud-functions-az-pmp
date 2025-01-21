@@ -1,0 +1,4 @@
+gcloud beta functions deploy sftp_backup \
+  --docker-registry=artifact-registry \
+--no-gen2 --trigger-topic=sftp-backup-trigger --runtime=python311 --region=us-west1 \
+--set-secrets=host=projects/423748121399/secrets/bamboo_sftp_host:1,password=projects/423748121399/secrets/bamboo_sftp_password:1,port=projects/423748121399/secrets/bamboo_sftp_port:1,path=projects/423748121399/secrets/bamboo_sftp_remote_path:1,user=projects/423748121399/secrets/bamboo_sftp_username:1,folder=projects/423748121399/secrets/folders_sftp_backup:1,service_key=projects/423748121399/secrets/service_key:1,topic_id=projects/423748121399/secrets/email_topic_id:1,project_id=projects/423748121399/secrets/project_id:1

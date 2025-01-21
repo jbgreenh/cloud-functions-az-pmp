@@ -1,0 +1,4 @@
+gcloud beta functions deploy scorecard \
+  --docker-registry=artifact-registry \
+--no-gen2 --trigger-topic=scorecard-trigger --runtime=python311 --region=us-west1 \
+--set-secrets=dispensations_47=projects/423748121399/secrets/dispensations_47:latest,patient_requests=projects/423748121399/secrets/patient_requests_folder:latest,scorecard=projects/423748121399/secrets/scorecard_file:latest,project_id=projects/423748121399/secrets/project_id:1,topic_id=projects/423748121399/secrets/email_topic_id:1
