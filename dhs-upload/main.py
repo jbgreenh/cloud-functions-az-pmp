@@ -96,8 +96,10 @@ def main(request):
         upload_latest_dhs_file(sftp, folder)
         remove_oldest_file(sftp)
     finally:
-        sftp.close()
-        ssh.close()
+        if sftp:
+            sftp.close()
+        if ssh:
+            ssh.close()
 
         message = Mail(
             from_email='pmpdata@azpharmacy.gov',
