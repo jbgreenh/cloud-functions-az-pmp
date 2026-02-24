@@ -91,8 +91,12 @@ if __name__ == '__main__':
     sftp = ssh.open_sftp()
 
     try:
+        start = datetime.now(tz=PHX_TZ)
+        logger.info('dhs_upload started %s\n', start)
         upload_latest_dhs_file(sftp, folder)
         remove_oldest_file(sftp)
+        end = datetime.now(tz=PHX_TZ)
+        logger.info('dhs_upload complete %s\n', end)
     finally:
         if sftp:
             sftp.close()
