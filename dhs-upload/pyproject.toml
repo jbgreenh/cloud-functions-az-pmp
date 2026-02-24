@@ -6,7 +6,6 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "az-pmp-utils",
-    "functions-framework>=3.10.0",
     "google-api-python-client>=2.189.0",
     "google-auth>=2.48.0",
     "paramiko>=4.0.0",

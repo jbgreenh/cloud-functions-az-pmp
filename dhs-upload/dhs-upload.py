@@ -4,7 +4,6 @@ from datetime import date, datetime, timedelta
 from io import BytesIO, StringIO
 from zoneinfo import ZoneInfo
 
-import functions_framework
 import google.auth
 import paramiko
 from az_pmp_utils import drive
@@ -44,11 +43,11 @@ def remove_oldest_file(sftp: paramiko.SFTPClient) -> None:
     files = sftp.listdir_attr()
     if len(files) > MAX_SERVU_FILE_COUNT:
         oldest_file = min(files, key=lambda f: f.st_mtime)  # type: ignore[reportArgumentType] | these files will have st_mtime
-        logger.info('removing oldest file: %s...', oldest_file.filename)
+        logger.info('removing oldest file: %s...\n', oldest_file.filename)
         sftp.remove(oldest_file.filename)
-        logger.info('file removed')
+        logger.info('file removed\n')
     else:
-        logger.warning('%s files on servu, none removed', MAX_SERVU_FILE_COUNT)
+        logger.warning('%s files on servu, none removed\n', MAX_SERVU_FILE_COUNT)
 
 
 def upload_latest_dhs_file(sftp: paramiko.SFTPClient, folder: str) -> None:
@@ -64,22 +63,21 @@ def upload_latest_dhs_file(sftp: paramiko.SFTPClient, folder: str) -> None:
     files = sftp.listdir()
 
     if file_name not in files:
-        logger.info('%s not found, uploading...', file_name)
+        logger.info('%s not found, uploading...\n', file_name)
         creds, _proj_id = google.auth.default()
         service = build('drive', 'v3', credentials=creds, cache_discovery=False)
         extract = drive.lazyframe_from_file_name(file_name=file_name, folder_id=folder, drive_ft='csv', service=service, separator='|', infer_schema=False)
         csv_buffer = BytesIO()
         extract.collect().write_csv(csv_buffer, separator='|')
         csv_buffer.seek(0)
-        logger.info('writing %s to sftp...', file_name)
+        logger.info('writing %s to sftp...\n', file_name)
         sftp.putfo(csv_buffer, remotepath=file_name)
-        logger.info('file uploaded')
+        logger.info('file uploaded\n')
     else:
         logger.warning('%s found, no upload yet', file_name)
 
 
-@functions_framework.http
-def main(request):
+if __name__ == '__main__':
     folder = os.environ['STANDARD_EXTRACT_FOLDER']
 
     sftp_host = os.environ['SERVU_HOST']
