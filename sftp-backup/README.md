@@ -7,7 +7,7 @@ to deploy:
 ```bash
 gcloud run jobs deploy sftp-backup \
  --source . \
- --memory 1Gi \
+ --memory 3Gi \
  --max-retries 5 \
  --region=us-west1 \
  --set-secrets=SENDGRID_API_KEY=projects/423748121399/secrets/sendgrid_api_key:latest,DATA_EMAIL=projects/423748121399/secrets/data_email:latest,\
