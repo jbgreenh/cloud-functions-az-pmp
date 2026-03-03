@@ -43,11 +43,11 @@ def remove_oldest_file(sftp: paramiko.SFTPClient) -> None:
     files = sftp.listdir_attr()
     if len(files) > MAX_SERVU_FILE_COUNT:
         oldest_file = min(files, key=lambda f: f.st_mtime)  # type: ignore[reportArgumentType] | these files will have st_mtime
-        logger.info('removing oldest file: %s...\n\n', oldest_file.filename)
+        logger.info('removing oldest file: %s...', oldest_file.filename)
         sftp.remove(oldest_file.filename)
-        logger.info('file removed\n\n')
+        logger.info('file removed')
     else:
-        logger.warning('%s files on servu, none removed\n\n', MAX_SERVU_FILE_COUNT)
+        logger.warning('%s files on servu, none removed', MAX_SERVU_FILE_COUNT)
 
 
 def upload_latest_dhs_file(sftp: paramiko.SFTPClient, folder: str) -> None:
@@ -63,16 +63,16 @@ def upload_latest_dhs_file(sftp: paramiko.SFTPClient, folder: str) -> None:
     files = sftp.listdir()
 
     if file_name not in files:
-        logger.info('%s not found, uploading...\n\n', file_name)
+        logger.info('%s not found, uploading...', file_name)
         creds, _proj_id = google.auth.default()
         service = build('drive', 'v3', credentials=creds, cache_discovery=False)
         extract = drive.lazyframe_from_file_name(file_name=file_name, folder_id=folder, drive_ft='csv', service=service, separator='|', infer_schema=False)
         csv_buffer = BytesIO()
         extract.collect().write_csv(csv_buffer, separator='|')
         csv_buffer.seek(0)
-        logger.info('writing %s to sftp...\n\n', file_name)
+        logger.info('writing %s to sftp...', file_name)
         sftp.putfo(csv_buffer, remotepath=file_name)
-        logger.info('file uploaded\n\n')
+        logger.info('file uploaded')
     else:
         logger.warning('%s found, no upload yet', file_name)
 
@@ -92,11 +92,11 @@ if __name__ == '__main__':
 
     try:
         start = datetime.now(tz=PHX_TZ)
-        logger.info('dhs_upload started %s\n\n', start)
+        logger.info('dhs_upload started %s', start)
         upload_latest_dhs_file(sftp, folder)
         remove_oldest_file(sftp)
         end = datetime.now(tz=PHX_TZ)
-        logger.info('dhs_upload complete %s\n\n', end)
+        logger.info('dhs_upload complete %s', end)
     finally:
         if sftp:
             sftp.close()
@@ -104,11 +104,11 @@ if __name__ == '__main__':
             ssh.close()
 
         message = Mail(
-            from_email='pmpdata@azpharmacy.gov',
-            to_emails=['pmpdata@azpharmacy.gov'],
+            from_email=os.environ['DATA_EMAIL'],
+            to_emails=[os.environ['DATA_EMAIL']],
             subject='pmp-analytics cloud function log: dhs_upload',
-            html_content=stream_string.getvalue().encode('utf-8'),
+            plain_text_content=stream_string.getvalue(),
         )
 
-        sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
+        sg = SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
         _response = sg.send(message)
