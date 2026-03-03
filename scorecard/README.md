@@ -1,4 +1,4 @@
-### scorecard
+# scorecard
 
 this script performs the monthly scorecard update on the 12th at 9:30AM
 
