@@ -110,7 +110,7 @@ if __name__ == '__main__':
     start = datetime.now(tz=PHX_TZ)
     logger.info('scorecard started %s\n', start)
 
-    creds = google.auth.default()
+    creds, _proj_id = google.auth.default()
     service = build('drive', 'v3', credentials=creds)
 
     new_row = pull_files(service)
