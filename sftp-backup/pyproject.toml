@@ -7,7 +7,9 @@ requires-python = ">=3.14"
 dependencies = [
     "az-pmp-utils",
     "google-api-python-client>=2.191.0",
+    "google-auth>=2.48.0",
     "paramiko>=4.0.0",
+    "sendgrid>=6.12.5",
 ]
 
 [tool.basedpyright]
