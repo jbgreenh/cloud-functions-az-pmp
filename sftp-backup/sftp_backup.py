@@ -138,8 +138,8 @@ def upload_directory(service, sftp: paramiko.SFTPClient, remote_path: str, drive
 
 if __name__ == '__main__':
     process_start = datetime.now(tz=PHX_TZ)
-    logger.info('sftp backup start: %s\n', process_start)
-    creds = google.auth.default()
+    logger.info('sftp backup start: %s', process_start)
+    creds, _proj_id = google.auth.default()
     service = build('drive', 'v3', credentials=creds)
 
     sftp_types = ['pmp', 'vendor']
@@ -167,7 +167,7 @@ if __name__ == '__main__':
         sftp = ssh.open_sftp()
         try:
             start_time = datetime.now(tz=PHX_TZ)
-            logger.info('updating %s sftp backup: %s...\n', sftp_type, start_time)
+            logger.info('updating %s sftp backup: %s...', sftp_type, start_time)
             upload_directory(service, sftp, remote_path, drive_folder_id)
         finally:
             if sftp:
@@ -177,10 +177,9 @@ if __name__ == '__main__':
                 ssh.close()
                 logger.debug('ssh closed')
             end_time = datetime.now(tz=PHX_TZ)
-            logger.info('%s sftp backup complete: %s', sftp_type, end_time)
+            logger.info('%s sftp backup complete: %s\n', sftp_type, end_time)
 
     process_end = datetime.now(tz=PHX_TZ)
-    logger.info('sftp backup complete: %s\n', process_end)
 
     message = Mail(
         from_email=os.environ['DATA_EMAIL'],
