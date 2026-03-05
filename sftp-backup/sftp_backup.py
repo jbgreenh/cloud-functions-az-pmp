@@ -138,7 +138,7 @@ def upload_directory(service, sftp: paramiko.SFTPClient, remote_path: str, drive
 
 if __name__ == '__main__':
     process_start = datetime.now(tz=PHX_TZ)
-    logger.info('sftp backup start: %s', process_start)
+    logger.info('sftp backup start: %s\n', process_start)
     creds, _proj_id = google.auth.default()
     service = build('drive', 'v3', credentials=creds)
 
