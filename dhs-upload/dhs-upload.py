@@ -106,7 +106,7 @@ if __name__ == '__main__':
         message = Mail(
             from_email=os.environ['DATA_EMAIL'],
             to_emails=[os.environ['DATA_EMAIL']],
-            subject='pmp-analytics cloud function log: dhs_upload',
+            subject='pmp-analytics cloud function log: dhs-upload',
             plain_text_content=stream_string.getvalue(),
         )
 
