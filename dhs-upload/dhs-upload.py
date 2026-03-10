@@ -78,6 +78,8 @@ def upload_latest_dhs_file(sftp: paramiko.SFTPClient, folder: str) -> None:
 
 
 if __name__ == '__main__':
+    start = datetime.now(tz=PHX_TZ)
+    logger.info('dhs_upload started %s', start)
     folder = os.environ['STANDARD_EXTRACT_FOLDER']
 
     sftp_host = os.environ['SERVU_HOST']
@@ -91,12 +93,8 @@ if __name__ == '__main__':
     sftp = ssh.open_sftp()
 
     try:
-        start = datetime.now(tz=PHX_TZ)
-        logger.info('dhs_upload started %s', start)
         upload_latest_dhs_file(sftp, folder)
         remove_oldest_file(sftp)
-        end = datetime.now(tz=PHX_TZ)
-        logger.info('dhs_upload complete %s', end)
     finally:
         if sftp:
             sftp.close()
@@ -111,4 +109,6 @@ if __name__ == '__main__':
         )
 
         sg = SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
+        end = datetime.now(tz=PHX_TZ)
+        logger.info('dhs_upload complete %s', end)
         _response = sg.send(message)
