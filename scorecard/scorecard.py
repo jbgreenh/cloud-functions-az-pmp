@@ -10,7 +10,7 @@ import polars as pl
 from az_pmp_utils import drive
 from googleapiclient.discovery import build
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from sendgrid.helpers.mail import ClickTracking, Mail, TrackingSettings
 
 PHX_TZ = ZoneInfo('America/Phoenix')
 
@@ -125,6 +125,8 @@ if __name__ == '__main__':
         subject='pmp-analytics cloud function log: scorecard',
         plain_text_content=stream_string.getvalue(),
     )
+    message.tracking_settings = TrackingSettings()
+    message.tracking_settings.click_tracking = ClickTracking(enable=False, enable_text=False)
 
     sg = SendGridAPIClient(os.environ.get('SENDGRID_API_KEY'))
     _response = sg.send(message)
