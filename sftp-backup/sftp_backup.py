@@ -179,8 +179,6 @@ if __name__ == '__main__':
             end_time = datetime.now(tz=PHX_TZ)
             logger.info('%s sftp backup complete: %s\n', sftp_type, end_time)
 
-    process_end = datetime.now(tz=PHX_TZ)
-
     message = Mail(
         from_email=os.environ['DATA_EMAIL'],
         to_emails=[os.environ['DATA_EMAIL']],
