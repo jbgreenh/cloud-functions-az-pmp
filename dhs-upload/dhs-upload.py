@@ -101,6 +101,9 @@ if __name__ == '__main__':
         if ssh:
             ssh.close()
 
+        end = datetime.now(tz=PHX_TZ)
+        logger.info('dhs_upload complete %s', end)
+
         message = Mail(
             from_email=os.environ['DATA_EMAIL'],
             to_emails=[os.environ['DATA_EMAIL']],
@@ -109,6 +112,4 @@ if __name__ == '__main__':
         )
 
         sg = SendGridAPIClient(os.environ['SENDGRID_API_KEY'])
-        end = datetime.now(tz=PHX_TZ)
-        logger.info('dhs_upload complete %s', end)
         _response = sg.send(message)
