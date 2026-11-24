@@ -179,6 +179,7 @@ def clean_sftp(sftp: paramiko.SFTPClient, current_dir: str | None = None) -> Non
         if stat.S_ISDIR(entry.st_mode):  # type: ignore[reportArgumentType] | these files will have st_mode
             if entry.filename == 'uploads':
                 sftp.chdir(full_path)
+                logger.info('cleaning %s...', full_path)
                 remove_oldest_file(sftp)
                 sftp.chdir(current_dir)
             else:
@@ -219,7 +220,7 @@ if __name__ == '__main__':
             logger.info('updating %s sftp backup: %s...', sftp_type, start_time)
             upload_directory(service, sftp, remote_path, drive_folder_id)
             if sftp_type == 'pmp':
-                clean_sftp(sftp)
+                clean_sftp(sftp, '~')
         finally:
             if sftp:
                 sftp.close()
