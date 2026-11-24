@@ -3,7 +3,7 @@ name = "sftp-backup"
 version = "0.1.0"
 description = "run the daily sftp backups"
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.15"
 dependencies = [
     "az-pmp-utils",
     "google-api-python-client>=2.191.0",
@@ -18,7 +18,7 @@ useLibraryCodeForTypes = true
 disableOrganizeImports = true
 
 [tool.ruff]
-target-version='py314'
+target-version='py315'
 
 [tool.ruff.format]
 quote-style = 'preserve'
