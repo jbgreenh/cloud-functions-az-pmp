@@ -1,5 +1,6 @@
 import logging
 import os
+import posixpath
 import stat
 import sys
 from datetime import datetime, timedelta
@@ -14,6 +15,7 @@ from googleapiclient.http import MediaIoBaseUpload
 from sendgrid import SendGridAPIClient
 from sendgrid.helpers.mail import Mail
 
+MAX_SERVU_FILE_COUNT = 5
 PHX_TZ = ZoneInfo('America/Phoenix')
 
 logger = logging.getLogger(__name__)
@@ -23,7 +25,7 @@ stream_handler = logging.StreamHandler(stream=stream_string)
 logger.addHandler(stream_handler)
 
 
-def upload_file(service, sftp: paramiko.SFTPClient, remote_file_path: str, drive_folder_id: str) -> None:  # noqa: ANN001 | service is dynamically typed
+def upload_file(service, sftp: paramiko.SFTPClient, remote_file_path: str, drive_folder_id: str) -> None:  # ruff: ignore[missing-type-function-argument] | service is dynamically typed
     """
     uploads a file to the google drive if it is new or has been modified
     only checks files with an mtime younger than 24 hours
@@ -34,7 +36,7 @@ def upload_file(service, sftp: paramiko.SFTPClient, remote_file_path: str, drive
        remote_file_path: the remote file path to the file for potential uploading
        drive_folder_id: the id of the target folder on the google drive
     """
-    remote_file = os.path.basename(remote_file_path)  # noqa: PTH119 | paramiko is not compatible with Path
+    remote_file = os.path.basename(remote_file_path)  # ruff: ignore[os-path-basename] | paramiko is not compatible with Path
 
     st_mtime = sftp.lstat(remote_file_path).st_mtime
     remote_file_mtime = datetime.fromtimestamp(float(st_mtime)).astimezone(tz=ZoneInfo('UTC')) if isinstance(st_mtime, int) else datetime(year=2001, month=1, day=1, tzinfo=ZoneInfo('UTC'))
@@ -79,7 +81,7 @@ def upload_file(service, sftp: paramiko.SFTPClient, remote_file_path: str, drive
         logger.debug('%s is %s hours old, skipping...', remote_file, round((datetime.now(tz=ZoneInfo('UTC')) - remote_file_mtime).total_seconds() / 60 / 60, 2))
 
 
-def find_or_create_folder(service, folder_name: str, parent_folder_id: str) -> str:  # noqa: ANN001 | service is dynamically typed
+def find_or_create_folder(service, folder_name: str, parent_folder_id: str) -> str:  # ruff: ignore[missing-type-function-argument] | service is dynamically typed
     """
     finds or creates the specified folder on the google drive
 
@@ -110,7 +112,7 @@ def find_or_create_folder(service, folder_name: str, parent_folder_id: str) -> s
         sys.exit()
 
 
-def upload_directory(service, sftp: paramiko.SFTPClient, remote_path: str, drive_folder_id: str) -> None:  # noqa: ANN001 | service is dynamically typed
+def upload_directory(service, sftp: paramiko.SFTPClient, remote_path: str, drive_folder_id: str) -> None:  # ruff: ignore[missing-type-function-argument] | service is dynamically typed
     """
     upload an entire directory from an sftp to the google drive as needed
 
@@ -134,6 +136,53 @@ def upload_directory(service, sftp: paramiko.SFTPClient, remote_path: str, drive
             subfolder_name = item
             subfolder_drive_folder_id = find_or_create_folder(service, subfolder_name, drive_folder_id)
             upload_directory(service, sftp, remote_item_path + '/', subfolder_drive_folder_id)
+
+
+def remove_oldest_file(sftp: paramiko.SFTPClient) -> None:
+    """
+    removes the oldest file from the current folder in the sftp; maintains the `MAX_SERVU_FILE_COUNT` on the server
+
+    args:
+        sftp: paramiko SFTPClient
+    """
+    files = sftp.listdir_attr()
+    if len(files) > MAX_SERVU_FILE_COUNT:
+        while len(files) > MAX_SERVU_FILE_COUNT:
+            oldest_file = min(files, key=lambda f: f.st_mtime)  # type: ignore[reportArgumentType] | these files will have st_mtime
+            logger.info('removing oldest file: %s...', oldest_file.filename)
+            sftp.remove(oldest_file.filename)
+            logger.info('file removed')
+    else:
+        logger.warning('%s files in folder, none removed', len(files))
+
+
+def clean_sftp(sftp: paramiko.SFTPClient, current_dir: str | None = None) -> None:
+    """
+    runs through all folders in `current_dir` and runs `remove_oldest_file` in any folders named 'uploads'
+
+    args:
+        sftp: paramiko SFTPClient
+        current_dir: the directory to search for updates folders
+    """
+    if current_dir is None:
+        sftp.chdir('.')
+        cwd = sftp.getcwd()
+        current_dir = cwd if cwd is not None else '.'
+    try:
+        entries = sftp.listdir_attr(current_dir)
+    except OSError:
+        return
+
+    for entry in entries:
+        full_path = posixpath.join(current_dir, entry.filename)
+
+        if stat.S_ISDIR(entry.st_mode):  # type: ignore[reportArgumentType] | these files will have st_mode
+            if entry.filename == 'uploads':
+                sftp.chdir(full_path)
+                remove_oldest_file(sftp)
+                sftp.chdir(current_dir)
+            else:
+                clean_sftp(sftp, full_path)
 
 
 if __name__ == '__main__':
@@ -169,6 +218,8 @@ if __name__ == '__main__':
             start_time = datetime.now(tz=PHX_TZ)
             logger.info('updating %s sftp backup: %s...', sftp_type, start_time)
             upload_directory(service, sftp, remote_path, drive_folder_id)
+            if sftp_type == 'pmp':
+                clean_sftp(sftp)
         finally:
             if sftp:
                 sftp.close()
